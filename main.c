@@ -5,7 +5,7 @@
 
 struct user{
     char name[50];
-    int password[50];
+    char password[50];
     float balance;
 };
 struct user users[100];
@@ -14,10 +14,6 @@ void menu(){
     printf("                  WELCOME TO CASHSIM\n");
     printf("                    1. Account Signup\n");
     printf("                    2. Account Login\n");
-    // printf("                    2. View Balance\n");
-    // printf("                    3. Deposit Money\n");
-    // printf("                    4. Withdraw Money\n");
-    // printf("                    5. Transfer Money\n");
     printf("                    3. Exit\n");
 }
 
@@ -27,11 +23,11 @@ void signup(){
     while (ans=='y')
     {           
         printf("Enter your name: ");
-        scanf("%s",&users[i].name);
+        scanf("%s",users[i].name);
         printf("Enter your password: ");
-        scanf("%d",&users[i].password);
+        scanf("%s",users[i].password);
         printf("Enter your balance: ");
-        scanf("%f",&users[i].balance);
+        scanf("%g",&users[i].balance);
         i++;
         printf("Account created successfully!\n");
         printf("Do you want to add another user? (y/n): ");
@@ -40,28 +36,38 @@ void signup(){
 }    
     
 void login(){
-    char name[50];
-    int password;
+    char name[50],password[20];
     printf("Enter your name: ");
     scanf("%s",&name);
     printf("Enter your password: ");
-    scanf("%d",&password);
+    scanf("%s",&password);
+    int flag=0;
     for (int i=0;i<100;i++){
-        if (users[i].name==name && users[i].password==password){
+        if (strcmp(users[i].name,name) && 
+            strcmp(users[i].password,password)){
             printf("Login successful!\n");
+            flag=1;
             break;
         }
+        printf("Login failed!\n");
     }
-    printf("Login failed!\n");
-    
 }
 
+if (flag==1){
+    transactionMenu();
+}
+
+void transactionMenu(){
+    printf("                    1. View Balance\n");
+    printf("                    2. Deposit Money\n");
+    printf("                    3. Withdraw Money\n");
+    printf("                    4. Transfer Money\n");
+}
 
 int main() {
     char ans='y';
     while (ans=='y'){
     menu();
-    printf("%s",users[0].name);
     int choice;
     printf("Enter your choice: ");
     scanf("%d",&choice);
