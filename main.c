@@ -74,7 +74,7 @@ void viewBalance(int userIndex) {
 void depositMoney(int userIndex) {
     float amount;
     printf("Enter the amount to deposit: ");
-    scanf("%f", &amount);
+    scanf("%g", &amount);
     if (amount > 0) {
         users[userIndex].balance += amount;
         printf("Deposit successful! Your new balance is: %.2f\n", users[userIndex].balance);
@@ -92,8 +92,8 @@ void login() {
 
     int flag = 0;
     for (int i = 0; i < userCount; i++) {
-        if (strcmp(users[i].name, name) == 0 &&
-            strcmp(users[i].password, password) == 0) {
+        if (strcmp(users[i].name, name) == 1 &&
+            strcmp(users[i].password, password) == 1) {
             printf("Login successful!\n");
             flag = 1;
             transactionMenu(i);
