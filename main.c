@@ -43,6 +43,8 @@ void signup() {
 
 void transactionMenu(int userIndex) {
     int choice;
+    char continueChoice;
+    
     do {
         printf("\nTransaction Menu:\n");
         printf("  1. View Balance\n");
@@ -64,7 +66,14 @@ void transactionMenu(int userIndex) {
             default:
                 printf("Invalid choice! Please try again.\n");
         }
-    } while (choice != 3);
+        
+        // Ask if the user wants to continue or not
+        if (choice != 3) {
+            printf("Do you want to continue? (Y/N): ");
+            scanf(" %c", &continueChoice);  // The space before %c is to catch any leftover newline character
+        }
+        
+    } while (choice != 3 && (continueChoice == 'Y' || continueChoice == 'y'));
 }
 
 void viewBalance(int userIndex) {
@@ -92,8 +101,8 @@ void login() {
 
     int flag = 0;
     for (int i = 0; i < userCount; i++) {
-        if (strcmp(users[i].name, name) == 1 &&
-            strcmp(users[i].password, password) == 1) {
+        if (strcmp(users[i].name, name) == 0 &&
+            strcmp(users[i].password, password) == 0) {
             printf("Login successful!\n");
             flag = 1;
             transactionMenu(i);
@@ -118,7 +127,7 @@ int main() {
             login();
         } else if (choice == 3) {
             printf("Exiting...\n");
-            break;
+            exit(1);
         } else {
             printf("Invalid choice, try again.\n");
         }
