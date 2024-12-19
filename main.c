@@ -18,6 +18,8 @@ struct user
     float balance;
     char accountType[50];
     int accountKey;
+    char transactionHistory[500];
+    int achievements;
 };
 struct user users[100];
 int userCount = 0;
@@ -32,9 +34,12 @@ void depositMoney(int userIndex);
 void withdrawMoney(int userIndex);
 void transferMoney(int userIndex);
 void generateAccountKey(int userIndex);
+void viewTransactionHistory(int userIndex);
+void logTransaction(int userIndex, const char *transactionDetail);
+void checkAchievements(int userIndex);
 void saveUsersToFile();
 void loadUsersFromFile();
-void waitMoment(const char *message);
+void currencyConverter(int userIndex);
 
 void menu()
 {
@@ -46,45 +51,17 @@ void menu()
     printf("========================================================\n");
 }
 
-void loadUsersFromFile()
+void logTransaction(int userIndex, const char *transactionDetail)
 {
-    FILE *file = fopen("users.txt", "r");
-    if (file == NULL)
-    {
-        printf("No existing user data found. Starting fresh like your 2024 resolutions.\n");
-        return;
-    }
-
-    userCount = 0;
-    while (fscanf(file, "%s %s %f", users[userCount].name, users[userCount].password, &users[userCount].balance) != EOF)
-    {
-        userCount++;
-    }
-
-    fclose(file);
-}
-
-void saveUsersToFile()
-{
-    FILE *file = fopen("users.txt", "w");
-    if (file == NULL)
-    {
-        printf("Error saving user data. Maybe the system is feeling lazy.\n");
-        return;
-    }
-
-    for (int i = 0; i < userCount; i++)
-    {
-        fprintf(file, "%s %s %.2f\n", users[i].name, users[i].password, users[i].balance);
-    }
-
-    fclose(file);
+    strcat(users[userIndex].transactionHistory, transactionDetail);
+    strcat(users[userIndex].transactionHistory, "\n");
 }
 
 void generateAccountKey(int userIndex)
 {
     srand(time(0) + userIndex);
     users[userIndex].accountKey = rand() % 100000 + 10000; // 5-digit key
+    strcpy(users[userIndex].transactionHistory, "Account created.\n");
 }
 
 void waitMoment(const char *message)
@@ -117,54 +94,14 @@ void signup()
         userCount++;
         printf("Account created successfully!\n");
         saveUsersToFile();
-        printf("Add another hopeful soul? (y/n): ");
+        printf("Add another Account? (y/n): ");
         scanf(" %c", &ans);
     }
 }
 
-void viewBalance(int userIndex)
+void viewTransactionHistory(int userIndex)
 {
-    printf("\nYour current balance is: $%.2f. Treat yourself to something nice!\n", users[userIndex].balance);
-}
-
-void depositMoney(int userIndex)
-{
-    float amount;
-    printf("Enter the amount to deposit (no Monopoly money, please): ");
-    scanf("%f", &amount);
-    if (amount > 0)
-    {
-        users[userIndex].balance += amount;
-        printf("Deposit successful! Your new balance is: $%.2f. You're rolling in cash now!\n", users[userIndex].balance);
-    }
-    else
-    {
-        printf("Invalid amount! Come on, don't try to break the system.\n");
-    }
-}
-
-void withdrawMoney(int userIndex)
-{
-    float amount;
-    printf("Enter the amount to withdraw (don't get too greedy): ");
-    scanf("%f", &amount);
-    if (amount > 0 && amount <= users[userIndex].balance && amount <= 5000)
-    {
-        users[userIndex].balance -= amount;
-        printf("Withdrawal successful! New balance: $%.2f. Spend wisely, my friend.\n", users[userIndex].balance);
-    }
-    else if (amount > users[userIndex].balance)
-    {
-        printf("Insufficient balance! Maybe try a piggy bank next time.\n");
-    }
-    else if (amount > 5000)
-    {
-        printf("Withdrawal limit exceeded! You can only withdraw $5000 at a time.\n");
-    }
-    else
-    {
-        printf("Invalid amount! Are you trying to withdraw negative money?\n");
-    }
+    printf("\nTransaction History:\n%s\n", users[userIndex].transactionHistory);
 }
 
 void transferMoney(int userIndex)
@@ -197,7 +134,15 @@ void transferMoney(int userIndex)
         users[userIndex].balance -= amount;
         users[recipientIndex].balance += amount;
         printf("Transfer successful! Your new balance is: $%.2f.\n", users[userIndex].balance);
-        printf("Recipient (%s) now has a balance of $%.2f.\n", users[recipientIndex].name, users[recipientIndex].balance);
+
+        char logEntry[100];
+        sprintf(logEntry, "Transferred $%.2f to account key %d.", amount, recipientKey);
+        logTransaction(userIndex, logEntry);
+
+        sprintf(logEntry, "Received $%.2f from account key %d.", amount, users[userIndex].accountKey);
+        logTransaction(recipientIndex, logEntry);
+
+        saveUsersToFile(); // Save after transfer
     }
     else if (amount > users[userIndex].balance)
     {
@@ -209,6 +154,104 @@ void transferMoney(int userIndex)
     }
 }
 
+void withdrawMoney(int userIndex)
+{
+    float amount;
+    printf("Enter the amount to withdraw (don't get too greedy): ");
+    scanf("%f", &amount);
+    if (amount > 0 && amount <= users[userIndex].balance)
+    {
+        users[userIndex].balance -= amount;
+        printf("Withdrawal successful! New balance: $%.2f. Spend wisely, my friend.\n", users[userIndex].balance);
+        char logEntry[100];
+        sprintf(logEntry, "Withdrew $%.2f.", amount);
+        logTransaction(userIndex, logEntry);
+        saveUsersToFile(); // Save after withdrawal
+    }
+    else if (amount > users[userIndex].balance)
+    {
+        printf("Insufficient balance! Maybe try a piggy bank next time.\n");
+    }
+    else
+    {
+        printf("Invalid amount! Are you trying to withdraw negative money?\n");
+    }
+}
+
+void depositMoney(int userIndex)
+{
+    float amount;
+    printf("Enter the amount to deposit (no Monopoly money, please): ");
+    scanf("%f", &amount);
+    if (amount > 0)
+    {
+        users[userIndex].balance += amount;
+        printf("Deposit successful! Your new balance is: $%.2f. You're rolling in cash now!\n", users[userIndex].balance);
+        char logEntry[100];
+        sprintf(logEntry, "Deposited $%.2f.", amount);
+        logTransaction(userIndex, logEntry);
+        checkAchievements(userIndex);
+        saveUsersToFile(); // Save after deposit
+    }
+    else
+    {
+        printf("Invalid amount! Come on, don't try to break the system.\n");
+    }
+}
+
+void viewBalance(int userIndex)
+{
+    printf("\nYour current balance is: $%.2f. Treat yourself to something nice!\n", users[userIndex].balance);
+    logTransaction(userIndex, "Checked balance.");
+}
+
+void checkAchievements(int userIndex)
+{
+    if (!(users[userIndex].achievements & 1))
+    { // First deposit
+        printf("Achievement Unlocked: First Deposit!\n");
+        users[userIndex].achievements |= 1;
+    }
+
+    if (users[userIndex].balance >= 10000 && !(users[userIndex].achievements & 2))
+    { // Big saver
+        printf("Achievement Unlocked: Big Saver!\n");
+        users[userIndex].achievements |= 2;
+    }
+}
+
+void currencyConverter(int userIndex)
+{
+    int choice;
+    float exchangeRate;
+    printf("\nCurrency Converter:\n");
+    printf("1. USD to EUR\n2. USD to GBP\n3. USD to INR\n4. USD to AUD\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice)
+    {
+    case 1:
+        exchangeRate = 0.90; // Example rate
+        printf("Balance in EUR: €%.2f\n", users[userIndex].balance * exchangeRate);
+        break;
+    case 2:
+        exchangeRate = 0.78; // Example rate
+        printf("Balance in GBP: £%.2f\n", users[userIndex].balance * exchangeRate);
+        break;
+    case 3:
+        exchangeRate = 82.50; // Example rate
+        printf("Balance in INR: ₹%.2f\n", users[userIndex].balance * exchangeRate);
+        break;
+    case 4:
+        exchangeRate = 1.45; // Example rate
+        printf("Balance in AUD: A$%.2f\n", users[userIndex].balance * exchangeRate);
+        break;
+    default:
+        printf("Invalid choice! Please try again.\n");
+    }
+}
+
 void accountOperations(int userIndex)
 {
     int choice;
@@ -217,11 +260,14 @@ void accountOperations(int userIndex)
     do
     {
         printf("\n========== %s Account Menu =========="
-               "\n1. View Balance - See how rich (or poor) you are."
-               "\n2. Deposit Money - Make it rain!"
-               "\n3. Withdraw Money - Treat yo'self!"
-               "\n4. Transfer Money - Share the wealth (or debts)."
-               "\n5. Logout - Take a break from all this financial stress."
+               "\n1. View Balance - Check your riches."
+               "\n2. Deposit Money - Grow your wealth."
+               "\n3. Withdraw Money - Spend wisely."
+               "\n4. Transfer Money - Share or settle."
+               "\n5. View Transaction History - Relive your financial moments."
+               "\n6. View Achievements - Check your unlocked achievements."
+               "\n7. Currency Converter - See your balance in other currencies."
+               "\n8. Logout - Take a break."
                "\nEnter your choice: ",
                users[userIndex].accountType);
         scanf("%d", &choice);
@@ -244,19 +290,28 @@ void accountOperations(int userIndex)
             saveUsersToFile();
             break;
         case 5:
+            viewTransactionHistory(userIndex);
+            break;
+        case 6:
+            checkAchievements(userIndex);
+            break;
+        case 7:
+            currencyConverter(userIndex);
+            break;
+        case 8:
             printf("Logging out of %s Account... Don't forget to come back!\n", users[userIndex].accountType);
             break;
         default:
-            printf("Invalid choice! Try again, money maestro.\n");
+            printf("Invalid choice! Try again.\n");
         }
 
-        if (choice != 5)
+        if (choice != 8)
         {
-            printf("Do you want to continue? (Y/N): ");
+            printf("Do you want to return to the main menu? (Y/N): ");
             scanf(" %c", &continueChoice);
         }
 
-    } while (choice != 5 && (continueChoice == 'Y' || continueChoice == 'y'));
+    } while (choice != 8 && (continueChoice == 'Y' || continueChoice == 'y'));
 }
 
 void login()
@@ -299,8 +354,34 @@ void login()
 
     if (flag == 0)
     {
-        printf("Login failed! Did you forget your password? Or your name?\n");
+        printf("No account found.\n Did you forget your password? Or your name?\n");
     }
+}
+
+void saveUsersToFile()
+{
+    FILE *file = fopen("users.txt", "w");
+    if (!file)
+    {
+        printf("Error saving data!\n");
+        return;
+    }
+    fwrite(&userCount, sizeof(userCount), 1, file);
+    fwrite(users, sizeof(struct user), userCount, file);
+    fclose(file);
+}
+
+void loadUsersFromFile()
+{
+    FILE *file = fopen("users.txt", "r");
+    if (!file)
+    {
+        // printf("No previous data found. Starting fresh!\n");
+        return;
+    }
+    fread(&userCount, sizeof(userCount), 1, file);
+    fread(users, sizeof(struct user), userCount, file);
+    fclose(file);
 }
 
 int main()
@@ -311,7 +392,7 @@ int main()
     {
         menu();
         int choice;
-        printf("Enter your choice: ");
+        printf("\nEnter your choice: ");
         scanf("%d", &choice);
         if (choice == 1)
         {
@@ -323,14 +404,15 @@ int main()
         }
         else if (choice == 3)
         {
-            printf("Exiting... Don't forget to come back and play with fake money!\n");
+            printf("\nExiting... Goodbye!");
+            saveUsersToFile(); // Save before exit
             exit(1);
         }
         else
         {
             printf("Invalid choice, try again. Don't worry, we're patient.\n");
         }
-        printf("Do you want to continue? (y/n): ");
+        printf("Do you want to return to the main menu? (y/n): ");
         scanf(" %c", &ans);
     }
 
