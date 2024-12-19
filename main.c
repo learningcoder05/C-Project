@@ -123,7 +123,7 @@ void transferMoney(int userIndex)
     printf("Enter the recipient's account key: ");
     scanf("%d", &recipientKey);
     printf("Enter the amount to transfer: ");
-    scanf("%.2f", &amount);
+    scanf("%f", &amount);
 
     int recipientIndex = -1;
     for (int i = 0; i < userCount; i++)
@@ -145,7 +145,7 @@ void transferMoney(int userIndex)
     {
         users[userIndex].balance -= amount;
         users[recipientIndex].balance += amount;
-        printf("Transfer successful! Your new balance is: $%d.\n", users[userIndex].balance);
+        printf("Transfer successful! Your new balance is: $%.2f.\n", users[userIndex].balance);
 
         char logEntry[100];
         sprintf(logEntry, "Transferred $%f to account key %d.", amount, recipientKey);
@@ -170,7 +170,7 @@ void withdrawMoney(int userIndex)
 {
     float amount;
     printf("Enter the amount to withdraw (don't get too greedy): ");
-    scanf("%.2f", &amount);
+    scanf("%f", &amount);
     if (amount > 0 && amount <= users[userIndex].balance)
     {
         users[userIndex].balance -= amount;
@@ -194,7 +194,7 @@ void depositMoney(int userIndex)
 {
     float amount;
     printf("Enter the amount to deposit (no Monopoly money, please): ");
-    scanf("%.2f", &amount);
+    scanf("%f", &amount);
     if (amount > 0)
     {
         users[userIndex].balance += amount;
@@ -219,16 +219,24 @@ void viewBalance(int userIndex)
 
 void checkAchievements(int userIndex)
 {
-    if (!(users[userIndex].achievements & 1))
+    printf("\nAchievements:\n");
+
+    if (users[userIndex].achievements & 1)
     { // First deposit
-        printf("Achievement Unlocked: First Deposit!\n");
-        users[userIndex].achievements |= 1;
+        printf(" First Deposit!\n");
+    }
+    else
+    {
+        printf(" First Deposit: Deposit money to unlock.\n");
     }
 
-    if (users[userIndex].balance >= 10000 && !(users[userIndex].achievements & 2))
+    if (users[userIndex].achievements & 2)
     { // Big saver
-        printf("Achievement Unlocked: Big Saver!\n");
-        users[userIndex].achievements |= 2;
+        printf(" Big Saver: Balance reached $10,000!\n");
+    }
+    else
+    {
+        printf(" Big Saver: Maintain a balance of $10,000 to unlock.\n");
     }
 }
 
@@ -236,32 +244,44 @@ void currencyConverter(int userIndex)
 {
     int choice;
     float exchangeRate;
-    printf("\nCurrency Converter:\n");
-    printf("1. USD to EUR\n2. USD to GBP\n3. USD to INR\n4. USD to AUD\n");
-    printf("Enter your choice: ");
-    scanf("%d", &choice);
+    char continueChoice;
 
-    switch (choice)
+    do
     {
-    case 1:
-        exchangeRate = 0.96;
-        printf("Balance in INR: €%f\n", users[userIndex].balance * exchangeRate);
-        break;
-    case 2:
-        exchangeRate = 0.79;
-        printf("Balance in GBP: £%f\n", users[userIndex].balance * exchangeRate);
-        break;
-    case 3:
-        exchangeRate = 85.12;
-        printf("Balance in EUR: ₹%f\n", users[userIndex].balance * exchangeRate);
-        break;
-    case 4:
-        exchangeRate = 1.60;
-        printf("Balance in AUD: A$%f\n", users[userIndex].balance * exchangeRate);
-        break;
-    default:
-        printf("Invalid choice! Please try again.\n");
-    }
+        printf("\nCurrency Converter:\n");
+        printf("1. USD to EUR\n2. USD to GBP\n3. USD to INR\n4. USD to AUD\n5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice)
+        {
+        case 1:
+            exchangeRate = 0.96;
+            printf("Balance in EUR: %.3f Euro\n", users[userIndex].balance * exchangeRate);
+            break;
+        case 2:
+            exchangeRate = 0.79;
+            printf("Balance in GBP: %.3f British Pound\n", users[userIndex].balance * exchangeRate);
+            break;
+        case 3:
+            exchangeRate = 85.12;
+            printf("Balance in INR: %.3f Indian Rupees\n", users[userIndex].balance * exchangeRate);
+            break;
+        case 4:
+            exchangeRate = 1.60;
+            printf("Balance in AUD: %.3f Australian Dollars\n", users[userIndex].balance * exchangeRate);
+            break;
+        case 5:
+            printf("Exiting Currency Converter...\n");
+            return; // Exit the function
+        default:
+            printf("Invalid choice! Please try again.\n");
+        }
+
+        printf("Do you want to perform another conversion? (Y/N): ");
+        scanf(" %c", &continueChoice);
+
+    } while (continueChoice == 'Y' || continueChoice == 'y');
 }
 
 void accountOperations(int userIndex)
