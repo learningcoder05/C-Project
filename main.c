@@ -17,6 +17,7 @@ struct user
     char password[50];
     float balance;
     char accountType[50];
+    int accountNumber;
     int accountKey;
     char transactionHistory[500];
     int achievements;
@@ -42,6 +43,7 @@ void loadUsersFromFile();
 void currencyConverter(int userIndex);
 void forgotPassword();
 void viewAccountDetails(int userIndex);
+void printTransactionHistory(int userIndex);
 
 void menu()
 {
@@ -64,6 +66,12 @@ void generateAccountKey(int userIndex)
     srand(time(0) + userIndex);
     users[userIndex].accountKey = rand() % 100000 + 10000; // 5-digit key
     strcpy(users[userIndex].transactionHistory, "Account created.\n");
+}
+
+void generateAccountNumber(int userIndex)
+{
+    srand(time(0) + userIndex);
+    users[userIndex].accountNumber = rand() % 100000 + 1000000; // 5-digit number
 }
 
 void waitMoment(const char *message)
@@ -95,6 +103,9 @@ void signup()
         printf("Enter your account type (Savings/Checking): ");
         scanf("%s", users[userCount].accountType);
 
+        generateAccountNumber(userCount);
+        printf("Your account number is: %d.\n", users[userCount].accountNumber);
+
         generateAccountKey(userCount);
         printf("Your unique account key is: %d. Keep it safe!\n", users[userCount].accountKey);
 
@@ -112,8 +123,32 @@ void viewAccountDetails(int userIndex)
     printf("Name: %s\n", users[userIndex].name);
     printf("Balance: $%.2f\n", users[userIndex].balance);
     printf("Account Type: %s\n", users[userIndex].accountType);
+    printf("Account Number: %d\n", users[userIndex].accountNumber);
     printf("Account Key: %d\n", users[userIndex].accountKey);
     printf("Transaction History:\n%s\n", users[userIndex].transactionHistory);
+}
+
+void printTransactionHistory(int userIndex)
+{
+    printf("\n================ TRANSACTION RECEIPT ================\n");
+    printf("Account Name   : %s\n", users[userIndex].name);
+    printf("Account Type   : %s\n", users[userIndex].accountType);
+    printf("Account Number : %d\n", users[userIndex].accountNumber);
+    printf("-----------------------------------------------------\n");
+    printf("Transaction History:\n");
+
+    char *transaction = strtok(users[userIndex].transactionHistory, "\n"); // Split by line
+    int count = 1;
+
+    while (transaction != NULL)
+    {
+        printf("%d. %s\n", count++, transaction);
+        transaction = strtok(NULL, "\n");
+    }
+
+    printf("-----------------------------------------------------\n");
+    printf("Current Balance: $%.2f\n", users[userIndex].balance);
+    printf("=====================================================\n");
 }
 
 void transferMoney(int userIndex)
@@ -293,13 +328,14 @@ void accountOperations(int userIndex)
     {
         printf("\n========== %s Account Menu =========="
                "\n1. View Balance - Check your riches."
-               "\n2. Deposit Money - Grow your wealth."
-               "\n3. Withdraw Money - Spend wisely."
-               "\n4. Transfer Money - Share or settle."
-               "\n5. View Achievements - Check your unlocked achievements."
-               "\n6. Currency Converter - See your balance in other currencies."
-               "\n7. View Account Details - Know your account better."
-               "\n8. Logout - Take a break."
+               "\n2. View Account Details - Know your account better."
+               "\n3. Deposit Money - Grow your wealth."
+               "\n4. Withdraw Money - Spend wisely."
+               "\n5. Transfer Money - Share or settle."
+               "\n6. View Achievements - Check your unlocked achievements."
+               "\n7. Currency Converter - See your balance in other currencies."
+               "\n8. View Transaction History - Check your past transactions."
+               "\n9. Logout - Take a break."
                "\nEnter your choice: ",
                users[userIndex].accountType);
         scanf("%d", &choice);
@@ -310,40 +346,42 @@ void accountOperations(int userIndex)
             viewBalance(userIndex);
             break;
         case 2:
+            viewAccountDetails(userIndex);
+            break;
+        case 3:
             depositMoney(userIndex);
             saveUsersToFile();
             break;
-        case 3:
+        case 4:
             withdrawMoney(userIndex);
             saveUsersToFile();
             break;
-        case 4:
+        case 5:
             transferMoney(userIndex);
             saveUsersToFile();
             break;
-        case 5:
+        case 6:
             checkAchievements(userIndex);
             break;
-        case 6:
+        case 7:
             currencyConverter(userIndex);
             break;
-        case 7:
-            viewAccountDetails(userIndex);
-            break;
         case 8:
+            printTransactionHistory(userIndex);
+            break;
+        case 9:
             printf("Logging out of %s Account... Don't forget to come back!\n", users[userIndex].accountType);
             break;
-        default:
             printf("Invalid choice! Try again.\n");
         }
 
-        if (choice != 8)
+        if (choice != 9)
         {
             printf("Do you want to continue using CashSim? (Y/N): ");
             scanf(" %c", &continueChoice);
         }
 
-    } while (choice != 8 && (continueChoice == 'Y' || continueChoice == 'y'));
+    } while (choice != 9 && (continueChoice == 'Y' || continueChoice == 'y'));
 }
 void forgotPassword()
 {
