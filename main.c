@@ -20,6 +20,8 @@ struct user
     int accountKey;
     char transactionHistory[500];
     int achievements;
+    char securityQuestion[50];
+    char securityAnswer[50];
 };
 struct user users[100];
 int userCount = 0;
@@ -40,6 +42,7 @@ void checkAchievements(int userIndex);
 void saveUsersToFile();
 void loadUsersFromFile();
 void currencyConverter(int userIndex);
+void forgotPassword();
 
 void menu()
 {
@@ -86,15 +89,24 @@ void signup()
         printf("Enter your password (don't worry, we won't judge): ");
         scanf("%s", users[userCount].password);
         printf("Enter your initial balance (imaginary riches are welcome): ");
-        scanf("%f", &users[userCount].balance);
+        scanf("%.2f", &users[userCount].balance);
         printf("Enter your account type (Savings/Checking): ");
         scanf("%s", users[userCount].accountType);
+
+        // Ask security question
+        printf("Set your security question: (e.g., What is your favorite color?)\n");
+        getchar(); // Consume newline left by previous input
+        fgets(users[userCount].securityQuestion, sizeof(users[userCount].securityQuestion), stdin);
+        users[userCount].securityQuestion[strcspn(users[userCount].securityQuestion, "\n")] = '\0'; // Remove newline
+        printf("Set your answer to the security question: ");
+        fgets(users[userCount].securityAnswer, sizeof(users[userCount].securityAnswer), stdin);
+        users[userCount].securityAnswer[strcspn(users[userCount].securityAnswer, "\n")] = '\0'; // Remove newline
+
         generateAccountKey(userCount);
         printf("Your unique account key is: %d. Keep it safe!\n", users[userCount].accountKey);
         userCount++;
-        printf("Account created successfully!\n");
-        saveUsersToFile();
-        printf("Add another Account? (y/n): ");
+        printf("Congrats! Your account has been created!\n");
+        printf("Do you want to add another user to our growing list of financial adventurers? (y/n): ");
         scanf(" %c", &ans);
     }
 }
@@ -111,7 +123,7 @@ void transferMoney(int userIndex)
     printf("Enter the recipient's account key: ");
     scanf("%d", &recipientKey);
     printf("Enter the amount to transfer: ");
-    scanf("%f", &amount);
+    scanf("%.2f", &amount);
 
     int recipientIndex = -1;
     for (int i = 0; i < userCount; i++)
@@ -133,13 +145,13 @@ void transferMoney(int userIndex)
     {
         users[userIndex].balance -= amount;
         users[recipientIndex].balance += amount;
-        printf("Transfer successful! Your new balance is: $%.2f.\n", users[userIndex].balance);
+        printf("Transfer successful! Your new balance is: $%d.\n", users[userIndex].balance);
 
         char logEntry[100];
-        sprintf(logEntry, "Transferred $%.2f to account key %d.", amount, recipientKey);
+        sprintf(logEntry, "Transferred $%f to account key %d.", amount, recipientKey);
         logTransaction(userIndex, logEntry);
 
-        sprintf(logEntry, "Received $%.2f from account key %d.", amount, users[userIndex].accountKey);
+        sprintf(logEntry, "Received $%f from account key %d.", amount, users[userIndex].accountKey);
         logTransaction(recipientIndex, logEntry);
 
         saveUsersToFile(); // Save after transfer
@@ -158,11 +170,11 @@ void withdrawMoney(int userIndex)
 {
     float amount;
     printf("Enter the amount to withdraw (don't get too greedy): ");
-    scanf("%f", &amount);
+    scanf("%.2f", &amount);
     if (amount > 0 && amount <= users[userIndex].balance)
     {
         users[userIndex].balance -= amount;
-        printf("Withdrawal successful! New balance: $%.2f. Spend wisely, my friend.\n", users[userIndex].balance);
+        printf("Withdrawal successful! New balance: $%.3f. Spend wisely, my friend.\n", users[userIndex].balance);
         char logEntry[100];
         sprintf(logEntry, "Withdrew $%.2f.", amount);
         logTransaction(userIndex, logEntry);
@@ -182,7 +194,7 @@ void depositMoney(int userIndex)
 {
     float amount;
     printf("Enter the amount to deposit (no Monopoly money, please): ");
-    scanf("%f", &amount);
+    scanf("%.2f", &amount);
     if (amount > 0)
     {
         users[userIndex].balance += amount;
@@ -232,20 +244,20 @@ void currencyConverter(int userIndex)
     switch (choice)
     {
     case 1:
-        exchangeRate = 0.90; // Example rate
-        printf("Balance in EUR: €%.2f\n", users[userIndex].balance * exchangeRate);
+        exchangeRate = 0.96;
+        printf("Balance in INR: €%f\n", users[userIndex].balance * exchangeRate);
         break;
     case 2:
-        exchangeRate = 0.78; // Example rate
-        printf("Balance in GBP: £%.2f\n", users[userIndex].balance * exchangeRate);
+        exchangeRate = 0.79;
+        printf("Balance in GBP: £%f\n", users[userIndex].balance * exchangeRate);
         break;
     case 3:
-        exchangeRate = 82.50; // Example rate
-        printf("Balance in INR: ₹%.2f\n", users[userIndex].balance * exchangeRate);
+        exchangeRate = 85.12;
+        printf("Balance in EUR: ₹%f\n", users[userIndex].balance * exchangeRate);
         break;
     case 4:
-        exchangeRate = 1.45; // Example rate
-        printf("Balance in AUD: A$%.2f\n", users[userIndex].balance * exchangeRate);
+        exchangeRate = 1.60;
+        printf("Balance in AUD: A$%f\n", users[userIndex].balance * exchangeRate);
         break;
     default:
         printf("Invalid choice! Please try again.\n");
@@ -307,54 +319,129 @@ void accountOperations(int userIndex)
 
         if (choice != 8)
         {
-            printf("Do you want to return to the main menu? (Y/N): ");
+            printf("Do you want to continue using CashSim? (Y/N): ");
             scanf(" %c", &continueChoice);
         }
 
     } while (choice != 8 && (continueChoice == 'Y' || continueChoice == 'y'));
 }
-
-void login()
+void forgotPassword()
 {
-    char name[50], password[50];
+    char name[50];
+    int found = 0;
+
+    printf("Forgot Password:\n");
     printf("Enter your name: ");
     scanf("%s", name);
-    printf("Enter your password: ");
 
-    int i = 0;
-    char ch;
-    while ((ch = getch()) != '\r')
-    { // '\r' is the Enter key
-        if (ch == '\b' && i > 0)
-        { // Handle backspace
-            i--;
-            printf("\b \b");
-        }
-        else if (ch != '\b')
-        {
-            password[i++] = ch;
-            printf("*");
-        }
-    }
-    password[i] = '\0';
-    printf("\n");
-
-    int flag = 0;
     for (int i = 0; i < userCount; i++)
     {
-        if (strcmp(users[i].name, name) == 0 &&
-            strcmp(users[i].password, password) == 0)
+        if (strcmp(users[i].name, name) == 0)
         {
-            printf("Login successful! Welcome back, financial wizard!\n");
-            flag = 1;
-            accountOperations(i);
+            found = 1;
+            printf("Security Question: %s\n", users[i].securityQuestion);
+            char answer[50];
+            printf("Enter your answer: ");
+            getchar(); // Consume newline left by previous input
+            fgets(answer, sizeof(answer), stdin);
+            answer[strcspn(answer, "\n")] = '\0'; // Remove newline
+
+            if (strcmp(users[i].securityAnswer, answer) == 0)
+            {
+                char newPassword[50];
+                printf("Verification successful!\n");
+                printf("Enter your new password: ");
+                scanf("%s", newPassword);
+                strcpy(users[i].password, newPassword);
+                printf("Password reset successfully!\n");
+                saveUsersToFile(); // Save updated password to file
+            }
+            else
+            {
+                printf("Incorrect answer to the security question! Password reset failed.\n");
+            }
             break;
         }
     }
 
-    if (flag == 0)
+    if (!found)
     {
-        printf("No account found.\n Did you forget your password? Or your name?\n");
+        printf("No account found with the given name.\n");
+    }
+}
+
+void login()
+{
+    char name[50], password[50];
+    int loginAttempts = 0; // Track failed login attempts
+    int maxAttempts = 3;   // Limit to 3 attempts
+
+    printf("Enter your name: ");
+    scanf("%s", name);
+
+    while (loginAttempts < maxAttempts)
+    {
+        printf("Enter your password: ");
+        int i = 0;
+        char ch;
+
+        // Hide password input
+        while ((ch = getch()) != '\r')
+        { // '\r' is the Enter key
+            if (ch == '\b' && i > 0)
+            { // Handle backspace
+                i--;
+                printf("\b \b");
+            }
+            else if (ch != '\b')
+            {
+                password[i++] = ch;
+                printf("*");
+            }
+        }
+        password[i] = '\0';
+        printf("\n");
+
+        // Check credentials
+        int flag = 0;
+        for (int i = 0; i < userCount; i++)
+        {
+            if (strcmp(users[i].name, name) == 0 &&
+                strcmp(users[i].password, password) == 0)
+            {
+                printf("Login successful! Welcome back, financial wizard!\n");
+                flag = 1;
+                accountOperations(i);
+                return; // Exit after successful login
+            }
+        }
+
+        if (!flag)
+        {
+            loginAttempts++;
+            if (loginAttempts < maxAttempts)
+            {
+                printf("Incorrect password! Attempts remaining: %d\n", maxAttempts - loginAttempts);
+            }
+        }
+    }
+
+    // If max attempts reached
+    if (loginAttempts == maxAttempts)
+    {
+        printf("Maximum login attempts exceeded.\n");
+        char choice;
+        printf("Would you like to reset your password? (y/n): ");
+        scanf(" %c", &choice);
+
+        if (choice == 'y' || choice == 'Y')
+        {
+            forgotPassword();
+        }
+        else
+        {
+            printf("Returning to the main menu.\n");
+        }
     }
 }
 
