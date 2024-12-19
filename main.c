@@ -20,9 +20,8 @@ struct user
     int accountKey;
     char transactionHistory[500];
     int achievements;
-    char securityQuestion[50];
-    char securityAnswer[50];
 };
+
 struct user users[100];
 int userCount = 0;
 
@@ -36,13 +35,13 @@ void depositMoney(int userIndex);
 void withdrawMoney(int userIndex);
 void transferMoney(int userIndex);
 void generateAccountKey(int userIndex);
-void viewTransactionHistory(int userIndex);
 void logTransaction(int userIndex, const char *transactionDetail);
 void checkAchievements(int userIndex);
 void saveUsersToFile();
 void loadUsersFromFile();
 void currencyConverter(int userIndex);
 void forgotPassword();
+void viewAccountDetails(int userIndex);
 
 void menu()
 {
@@ -86,34 +85,35 @@ void signup()
     {
         printf("\nEnter your name (or alias if you're feeling mysterious): ");
         scanf("%s", users[userCount].name);
+
         printf("Enter your password (don't worry, we won't judge): ");
         scanf("%s", users[userCount].password);
+
         printf("Enter your initial balance (imaginary riches are welcome): ");
-        scanf("%.2f", &users[userCount].balance);
+        scanf("%f", &users[userCount].balance);
+
         printf("Enter your account type (Savings/Checking): ");
         scanf("%s", users[userCount].accountType);
 
-        // Ask security question
-        printf("Set your security question: (e.g., What is your favorite color?)\n");
-        getchar(); // Consume newline left by previous input
-        fgets(users[userCount].securityQuestion, sizeof(users[userCount].securityQuestion), stdin);
-        users[userCount].securityQuestion[strcspn(users[userCount].securityQuestion, "\n")] = '\0'; // Remove newline
-        printf("Set your answer to the security question: ");
-        fgets(users[userCount].securityAnswer, sizeof(users[userCount].securityAnswer), stdin);
-        users[userCount].securityAnswer[strcspn(users[userCount].securityAnswer, "\n")] = '\0'; // Remove newline
-
         generateAccountKey(userCount);
         printf("Your unique account key is: %d. Keep it safe!\n", users[userCount].accountKey);
+
         userCount++;
         printf("Congrats! Your account has been created!\n");
+
         printf("Do you want to add another user to our growing list of financial adventurers? (y/n): ");
         scanf(" %c", &ans);
     }
 }
 
-void viewTransactionHistory(int userIndex)
+void viewAccountDetails(int userIndex)
 {
-    printf("\nTransaction History:\n%s\n", users[userIndex].transactionHistory);
+    printf("\nAccount Details:\n");
+    printf("Name: %s\n", users[userIndex].name);
+    printf("Balance: $%.2f\n", users[userIndex].balance);
+    printf("Account Type: %s\n", users[userIndex].accountType);
+    printf("Account Key: %d\n", users[userIndex].accountKey);
+    printf("Transaction History:\n%s\n", users[userIndex].transactionHistory);
 }
 
 void transferMoney(int userIndex)
@@ -276,9 +276,9 @@ void accountOperations(int userIndex)
                "\n2. Deposit Money - Grow your wealth."
                "\n3. Withdraw Money - Spend wisely."
                "\n4. Transfer Money - Share or settle."
-               "\n5. View Transaction History - Relive your financial moments."
-               "\n6. View Achievements - Check your unlocked achievements."
-               "\n7. Currency Converter - See your balance in other currencies."
+               "\n5. View Achievements - Check your unlocked achievements."
+               "\n6. Currency Converter - See your balance in other currencies."
+               "\n7. View Account Details - Know your account better."
                "\n8. Logout - Take a break."
                "\nEnter your choice: ",
                users[userIndex].accountType);
@@ -302,13 +302,13 @@ void accountOperations(int userIndex)
             saveUsersToFile();
             break;
         case 5:
-            viewTransactionHistory(userIndex);
-            break;
-        case 6:
             checkAchievements(userIndex);
             break;
-        case 7:
+        case 6:
             currencyConverter(userIndex);
+            break;
+        case 7:
+            viewAccountDetails(userIndex);
             break;
         case 8:
             printf("Logging out of %s Account... Don't forget to come back!\n", users[userIndex].accountType);
@@ -339,14 +339,11 @@ void forgotPassword()
         if (strcmp(users[i].name, name) == 0)
         {
             found = 1;
-            printf("Security Question: %s\n", users[i].securityQuestion);
-            char answer[50];
-            printf("Enter your answer: ");
-            getchar(); // Consume newline left by previous input
-            fgets(answer, sizeof(answer), stdin);
-            answer[strcspn(answer, "\n")] = '\0'; // Remove newline
+            printf("Unique key: ");
+            int answer;
+            scanf("%d", &answer);
 
-            if (strcmp(users[i].securityAnswer, answer) == 0)
+            if ((users[i].accountKey == answer))
             {
                 char newPassword[50];
                 printf("Verification successful!\n");
