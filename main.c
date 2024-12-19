@@ -48,7 +48,7 @@ void menu()
     printf("1. Account Signup - Because who doesn't want a fake account?\n");
     printf("2. Account Login - Prove you belong here.\n");
     printf("3. Exit - Run while you still can!\n");
-    printf("========================================================\n");
+    printf("============================================================\n");
 }
 
 void logTransaction(int userIndex, const char *transactionDetail)
