@@ -153,17 +153,17 @@ void printTransactionHistory(int userIndex)
 
 void transferMoney(int userIndex)
 {
-    int recipientKey;
+    int recipientNumber;
     float amount;
-    printf("Enter the recipient's account key: ");
-    scanf("%d", &recipientKey);
+    printf("Enter the recipient's account Number: ");
+    scanf("%d", &recipientNumber);
     printf("Enter the amount to transfer: ");
     scanf("%f", &amount);
 
     int recipientIndex = -1;
     for (int i = 0; i < userCount; i++)
     {
-        if (users[i].accountKey == recipientKey)
+        if (users[i].accountNumber == recipientNumber)
         {
             recipientIndex = i;
             break;
@@ -172,7 +172,7 @@ void transferMoney(int userIndex)
 
     if (recipientIndex == -1)
     {
-        printf("Recipient not found! Double-check the account key.\n");
+        printf("Recipient not found! Double-check the account Number.\n");
         return;
     }
 
