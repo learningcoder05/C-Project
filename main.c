@@ -153,17 +153,17 @@ void printTransactionHistory(int userIndex)
 
 void transferMoney(int userIndex)
 {
-    int recipientKey;
+    int recipientNumber;
     float amount;
-    printf("Enter the recipient's account key: ");
-    scanf("%d", &recipientKey);
+    printf("Enter the recipient's account Number: ");
+    scanf("%d", &recipientNumber);
     printf("Enter the amount to transfer: ");
     scanf("%f", &amount);
 
     int recipientIndex = -1;
     for (int i = 0; i < userCount; i++)
     {
-        if (users[i].accountKey == recipientKey)
+        if (users[i].accountNumber == recipientNumber)
         {
             recipientIndex = i;
             break;
@@ -172,7 +172,7 @@ void transferMoney(int userIndex)
 
     if (recipientIndex == -1)
     {
-        printf("Recipient not found! Double-check the account key.\n");
+        printf("Recipient not found! Double-check the account Number.\n");
         return;
     }
 
@@ -183,10 +183,10 @@ void transferMoney(int userIndex)
         printf("Transfer successful! Your new balance is: $%.2f.\n", users[userIndex].balance);
 
         char logEntry[100];
-        sprintf(logEntry, "Transferred $%f to account key %d.", amount, recipientKey);
+        sprintf(logEntry, "Transferred $%.2f to account Number %d.", amount, recipientNumber);
         logTransaction(userIndex, logEntry);
 
-        sprintf(logEntry, "Received $%f from account key %d.", amount, users[userIndex].accountKey);
+        sprintf(logEntry, "Received $%.2f from account Number %d.", amount, users[userIndex].accountNumber);
         logTransaction(recipientIndex, logEntry);
 
         saveUsersToFile(); // Save after transfer
